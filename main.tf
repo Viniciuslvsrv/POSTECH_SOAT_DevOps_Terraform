@@ -49,7 +49,7 @@ resource "aws_eks_cluster" "fiap_eks_cluster" {
       {
         types   = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
         enabled = false
-      }
+      },
     ]
   }
 }
