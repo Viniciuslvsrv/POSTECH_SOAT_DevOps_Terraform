@@ -1,55 +1,23 @@
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_vpc" "fiap_vpc" {
-  id = "vpc-02c2ba60989faba37"
-}
-
-resource "aws_subnet" "subnet_1" {
-  id                 = "subnet-001a52e2c24572b0f"
-  vpc_id             = aws_vpc.fiap_vpc.id
-  cidr_block         = "172.31.0.0/20"
-  availability_zone  = "us-east-1d"
-}
-
-resource "aws_subnet" "subnet_2" {
-  id                 = "subnet-0544588be5ae9de4d"
-  vpc_id             = aws_vpc.fiap_vpc.id
-  cidr_block         = "172.31.32.0/20"
-  availability_zone  = "us-east-1c"
-}
-
-resource "aws_subnet" "subnet_3" {
-  id                 = "subnet-0d9acc67474146986"
-  vpc_id             = aws_vpc.fiap_vpc.id
-  cidr_block         = "172.31.16.0/20"
-  availability_zone  = "us-east-1b"
-}
-
-resource "aws_eks_cluster" "fiap_eks_cluster" {
-  name     = "fiap-tech-challenge"
-  role_arn = "arn:aws:iam::581324664826:role/LabRole"
+resource "aws_eks_cluster" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.example.arn
 
   vpc_config {
-    subnet_ids = [
-      aws_subnet.subnet_1.id,
-      aws_subnet.subnet_2.id,
-      aws_subnet.subnet_3.id,
-    ]
-    endpoint_public_access  = true
-    endpoint_private_access = true
-    public_access_cidrs     = ["0.0.0.0/0"]
+    subnet_ids = [aws_subnet.example1.id, aws_subnet.example2.id]
   }
 
-  kubernetes_version = "1.31"
+  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
+  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+  depends_on = [
+    aws_iam_role_policy_attachment.example-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.example-AmazonEKSVPCResourceController,
+  ]
+}
 
-  logging {
-    cluster_logging = [
-      {
-        types   = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
-        enabled = false
-      },
-    ]
-  }
+output "endpoint" {
+  value = aws_eks_cluster.example.endpoint
+}
+
+output "kubeconfig-certificate-authority-data" {
+  value = aws_eks_cluster.example.certificate_authority[0].data
 }
